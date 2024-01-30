@@ -3,6 +3,7 @@
 ## Versions
 |             |version|
 |-------------|-------|
+|Docker       |24.0.7 |
 |TypeScript   |5.2.2  |
 |Ruby         |3.3.0  |
 |Angular      |17.1.1 |
@@ -18,6 +19,14 @@ $ git clone git@github.com:Yuhscha/Angular-on-Rails-Template.git
 $ cd Angular-on-Rails-Template
 
 $ bash setup.sh
+```
+
+After cloning, remove the directory `.git`, and initialize git.
+
+```bash
+$ rm -rf .git
+
+$ git init
 ```
 
 ## Example
