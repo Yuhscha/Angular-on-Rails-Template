@@ -1,0 +1,79 @@
+version: "3.9"
+
+services:
+  web-front:
+    build:
+      context: angular-web-front
+      dockerfile: ./Dockerfile
+    command: sh -c "ng serve --host=0.0.0.0"
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./angular-web-front:/angular-web-front
+      - node_volume:/node_modules
+
+  api:
+    build: &rails_api
+      context: rails_api
+      dockerfile: ./Dockerfile
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails s -p 3000 -b '0.0.0.0'"
+    environment: &rails_api_env
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      REDIS_URL: redis://redis:6379/0
+      TZ: Asia/Tokyo
+    ports:
+      - 3000:3000
+    volumes:
+      - bundle_volume:/usr/local/bundle
+      - ./rails_api:/rails_api
+      - /rails_api/log:/root
+    working_dir: /rails_api
+    restart: always
+    tty: true
+    stdin_open: true
+    depends_on:
+      - db
+      - redis
+      - worker
+
+  db:
+    image: postgres:16.1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      TZ: Asia/Tokyo
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_volume:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:7.2.4
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_volume:/var/lib/redis/data
+
+  worker:
+    build:
+      <<: *rails_api
+    command: bundle exec sidekiq -C config/sidekiq.yml
+    environment:
+      <<: *rails_api_env
+    volumes:
+      - bundle_volume:/usr/local/bundle
+      - ./rails_api:/rails_api
+      - /rails_api/log:/root
+    working_dir: /rails_api
+    depends_on:
+      - redis
+
+volumes:
+  node_volume:
+  bundle_volume:
+  postgres_volume:
+  redis_volume:
