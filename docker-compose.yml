@@ -11,6 +11,7 @@ services:
     volumes:
       - ./angular-web-front:/angular-web-front
       - node_volume:/node_modules
+      - /angular-web-front/.angular/cache/17.1.1/angular-web-front:/root
 
   api:
     build: &rails_api
